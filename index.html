@@ -284,6 +284,7 @@
   .door-mat-switch label{color:var(--sub); white-space:nowrap}
   .door-mat-switch select{flex:1; padding:6px 8px; font-size:12.5px; border:1px solid var(--line); border-radius:7px; background:#fff; font-family:inherit; outline:none}
   .parse-spec-row.mat-hit{background:#f7fdfa; border-left:2px solid #34a56f}
+  .sheet-badge{display:inline-block; margin-left:4px; padding:1px 6px; border-radius:9px; background:#0f6e5622; color:#0a6e4f; font-size:10.5px; font-weight:500; white-space:nowrap}
 
   /* 手动添加区 */
   .w-add-btn{width:100%; margin-top:9px; padding:10px; border:1px dashed var(--brand); background:var(--brand-soft); color:var(--brand); border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit}
@@ -1552,8 +1553,9 @@ function resolveItem(w){
   if(w.kind==='mat'){ // 材料项：量×单价，不产生工时/人工费
     const q=parseFloat(w.q)||0, price=parseFloat(w.p)||0;
     const fee=q*price;
+    const sheetTxt=w.sheets?' · 约'+w.sheets+'张':'';
     return {n:w.n||'材料',u:w.u||'项',q,hours:0,fee,
-      note:`材料 ${q}${w.u||''} × ${price}元`,isMat:true,isCustom:true};
+      note:`材料 ${q}${w.u||''} × ${price}元${sheetTxt}`,isMat:true,isCustom:true};
   }
   if(w.cid){ // 自定义项
     const name=w.n||'自定义项';
@@ -1662,6 +1664,8 @@ function renderSceneChips(){
    work = 施工项(走工时定额)：{id, u, by}  by=area按面积 / perim按周长 / fixed固定
    mat  = 材料项(走量×单价)：{n, u, by, k, p}  k=单耗系数, p=参考单价(元)
    所有用量/单价展开后都可手动改，系数是经验起点、务必按实际校准。 */
+const SHEET_AREA=2.98;   // 标准板材 1220×2440mm = 2.98㎡/张
+let DOOR_DEPTH=0.2;      // 门头围边深度(米)，智能拆解时可改
 const DOOR_RECIPES = {
   alc:{ label:'铝塑板发光字门头', match:['铝塑板','铝板','铝塑'], glow:true,
     work:[
@@ -1673,7 +1677,7 @@ const DOOR_RECIPES = {
     mat:[
       {n:'热镀锌方管',        u:'米', by:'perim', k:2,   p:24},
       {n:'木方（基层）',      u:'米', by:'area',  k:2,   p:9},
-      {n:'铝塑板',            u:'㎡', by:'area',  k:1.1, p:110},
+      {n:'铝塑板',            u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'发光字',            u:'㎡', by:'area',  k:0.4, p:600},
       {n:'LED灯条',           u:'米', by:'perim', k:1.5, p:18},
       {n:'LED射灯',           u:'个', by:'area',  k:0.5, p:45},
@@ -1689,7 +1693,7 @@ const DOOR_RECIPES = {
     ],
     mat:[
       {n:'热镀锌方管',     u:'米', by:'perim', k:2,   p:24},
-      {n:'不锈钢板包边',   u:'㎡', by:'area',  k:0.5, p:320},
+      {n:'不锈钢板包边',   u:'㎡', by:'area',  k:0.5, p:320, sheet:true, wrap:true},
       {n:'不锈钢发光字',   u:'㎡', by:'area',  k:0.4, p:750},
       {n:'LED灯条',        u:'米', by:'perim', k:1.5, p:18},
       {n:'LED电源',        u:'个', by:'fixed', k:1,   p:120}
@@ -1703,7 +1707,7 @@ const DOOR_RECIPES = {
     ],
     mat:[
       {n:'热镀锌方管',  u:'米', by:'perim', k:2,   p:24},
-      {n:'亚克力面板',  u:'㎡', by:'area',  k:1.05,p:280},
+      {n:'亚克力面板',  u:'㎡', by:'area',  k:1.05,p:280, sheet:true, wrap:true},
       {n:'结构胶',      u:'支', by:'perim', k:0.3, p:25}
     ]
   },
@@ -1715,7 +1719,7 @@ const DOOR_RECIPES = {
     ],
     mat:[
       {n:'热镀锌方管', u:'米', by:'perim', k:2,   p:24},
-      {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110},
+      {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'PVC字',      u:'㎡', by:'area',  k:0.3, p:180}
     ]
   },
@@ -1739,7 +1743,7 @@ const DOOR_RECIPES = {
     mat:[
       {n:'热镀锌方管', u:'米', by:'perim', k:2,   p:24},
       {n:'木方（基层）',u:'米',by:'area',  k:2,   p:9},
-      {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110},
+      {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'发光字',     u:'㎡', by:'area',  k:0.4, p:600},
       {n:'LED灯条',    u:'米', by:'perim', k:1.5, p:18},
       {n:'LED射灯',    u:'个', by:'area',  k:0.5, p:45},
@@ -1756,22 +1760,39 @@ function matchDoorRecipe(t){
   }
   return {key:'generic',...DOOR_RECIPES.generic};
 }
-// 把配方按尺寸展开成 {work:[{id,q,note}], mat:[{n,u,q,p}]}，w/h 单位米
-function expandDoorRecipe(recipe, w, h, qty){
+// 把配方按尺寸展开成 {work:[{id,q,note}], mat:[{n,u,q,p,sheets}]}，w/h 单位米
+// sheet:true 的板材按标准张算张数；wrap:true 的板材用量要加侧包围（周长×深度）
+function expandDoorRecipe(recipe, w, h, qty, depth){
   const qtyN=qty>0?qty:1;
-  const area=w*h*qtyN;              // 总面积
+  const area=w*h*qtyN;              // 正面总面积
   const perim=2*(w+h)*qtyN;         // 总周长（米）
+  const dep=(depth>0?depth:DOOR_DEPTH);
+  const wrapArea=perim*dep;         // 侧包围展开面积 = 周长 × 围边深度
   const by={area, perim, fixed:qtyN};
   const rnd=(x)=>Math.round(x*100)/100;
   const work=recipe.work.map(x=>({
     id:x.id, q:rnd(by[x.by]*x.k), note:x.note, u:x.u,
     calc:`${x.by==='area'?'面积 '+area.toFixed(2)+'㎡':x.by==='perim'?'周长 '+perim.toFixed(1)+'米':qtyN+'套'} × ${x.k}`
   }));
-  const mat=recipe.mat.map(x=>({
-    n:x.n, u:x.u, q:Math.max(1,Math.round(by[x.by]*x.k)), p:x.p,
-    calc:`${x.by==='area'?'面积 '+area.toFixed(2)+'㎡':x.by==='perim'?'周长 '+perim.toFixed(1)+'米':qtyN+'套'} × ${x.k}`
-  }));
-  return {work,mat,area,perim};
+  const mat=recipe.mat.map(x=>{
+    // 板材含侧包围：正面面积 + 侧包面积，再乘单耗系数
+    const baseArea=x.wrap ? area+wrapArea : area;
+    const areaQty=baseArea*x.k;
+    let q, calc;
+    if(x.u==='㎡'&&x.by==='area'){
+      q=Math.max(1,rnd(areaQty));
+      calc=x.wrap
+        ? `正面${area.toFixed(2)} + 侧包${wrapArea.toFixed(2)}(${dep}米深) = ${baseArea.toFixed(2)}㎡ × ${x.k}`
+        : `面积 ${area.toFixed(2)}㎡ × ${x.k}`;
+    }else{
+      q=Math.max(1,Math.round(by[x.by]*x.k));
+      calc=`${x.by==='perim'?'周长 '+perim.toFixed(1)+'米':qtyN+'套'} × ${x.k}`;
+    }
+    const sheets=x.sheet ? Math.ceil(areaQty/SHEET_AREA) : 0;
+    if(sheets) calc+=` → 约 ${sheets} 张（${SHEET_AREA}㎡/张）`;
+    return {n:x.n,u:x.u,q,p:x.p,sheets,wrap:!!x.wrap,calc};
+  });
+  return {work,mat,area,perim,wrapArea,depth:dep};
 }
 /* ===== 规格智能解析：数量 + 尺寸 + 项目名 → 工程量 =====
    支持写法：5个1.2*2.4无框画 / 4个60.90的制度牌 / 30个门牌 / 6米×2米门头
@@ -1925,7 +1946,7 @@ function tryDoorRecipe(t){
   // 排除被当作尺寸的数字（尺寸后紧跟乘号的不算数量）
   if(qm){ const before=t.slice(0,qm.index); if(!/[×x*＊.]\s*$/.test(before)) qty=parseFloat(qm[1])||1; }
   const recipe=matchDoorRecipe(t);
-  const ex=expandDoorRecipe(recipe,w,h,qty);
+  const ex=expandDoorRecipe(recipe,w,h,qty,DOOR_DEPTH);
   const hits=[];
   // 施工项
   ex.work.forEach(x=>{
@@ -1934,7 +1955,7 @@ function tryDoorRecipe(t){
   });
   // 材料项（带 kind 标记，加入时写入 WORK）
   ex.mat.forEach(x=>{
-    hits.push({type:'mat',n:x.n,u:x.u,q:x.q,p:x.p,calc:x.calc,kw:recipe.label});
+    hits.push({type:'mat',n:x.n,u:x.u,q:x.q,p:x.p,sheets:x.sheets,wrap:x.wrap,calc:x.calc,kw:recipe.label});
   });
   // 附带识别句子里的其他工序（拆除/运输/测量等），但排除门头自身已覆盖的词
   const extra=parseSpec(t);
@@ -1945,7 +1966,7 @@ function tryDoorRecipe(t){
     if(e.type==='lib'&&/^(i_door|i_fascia|i_led|i_wire|i_steel|i_ssword|i_acrword|i_banner)$/.test(e.id)) return;
     hits.push(e);
   });
-  return {hits,recipe,area:ex.area,perim:ex.perim,w,h,qty};
+  return {hits,recipe,area:ex.area,perim:ex.perim,wrapArea:ex.wrapArea,depth:ex.depth,w,h,qty};
 }
 let SMART_PENDING=null;
 // 把原文按标点/换行拆成条目，用于识别不出时的兜底
@@ -1963,14 +1984,15 @@ function runSmartParse(){
     const matCount=door.hits.filter(h=>h.type==='mat').length;
     const workCount=door.hits.filter(h=>h.type==='lib').length;
     const generic=door.recipe.key==='generic';
-    let html=`<div class="parse-info">${generic?'⚠️ 未识别门头材质，按<b>默认铝塑板工艺</b>展开（下方可改材质）：<br>':''}识别为 <b>${esc(door.recipe.label)}</b>（${door.w.toFixed(2)}×${door.h.toFixed(2)}米${door.qty>1?' ×'+door.qty+'套':''}，面积 ${door.area.toFixed(2)}㎡）· <b>${workCount}</b> 项施工 + <b>${matCount}</b> 项材料。数量/单价都可改：</div>`;
-    // 材质切换下拉
+    let html=`<div class="parse-info">${generic?'⚠️ 未识别门头材质，按<b>默认铝塑板工艺</b>展开（下方可改材质）：<br>':''}识别为 <b>${esc(door.recipe.label)}</b>（${door.w.toFixed(2)}×${door.h.toFixed(2)}米${door.qty>1?' ×'+door.qty+'套':''}，正面 ${door.area.toFixed(2)}㎡ + 侧包 ${door.wrapArea.toFixed(2)}㎡）· <b>${workCount}</b> 项施工 + <b>${matCount}</b> 项材料。数量/单价都可改：</div>`;
+    // 材质切换下拉 + 围边深度
     html+=`<div class="door-mat-switch"><label>门头材质</label><select id="doorMatSel">${Object.keys(DOOR_RECIPES).map(k=>`<option value="${k}"${k===door.recipe.key?' selected':''}>${DOOR_RECIPES[k].label}</option>`).join('')}</select></div>`;
+    html+=`<div class="door-mat-switch"><label>围边深度</label><input type="number" id="doorDepth" value="${door.depth}" min="0" max="2" step="0.05" inputmode="decimal" style="width:74px;padding:6px 8px;font-size:12.5px;border:1px solid var(--line);border-radius:7px;background:#fff;font-family:inherit;outline:none"><label>米（侧面包边进深，板材按此算侧包面积）</label></div>`;
     door.hits.forEach((h,i)=>{
       const isMat=h.type==='mat';
       html+=`<div class="parse-spec-row${isMat?' mat-hit':''}">
         <div class="psr-top">
-          <label><input type="checkbox" class="pck" data-i="${i}" checked><span class="psr-name">${isMat?'<span class="mat-tag sm">材料</span> ':''}${esc(h.n)}</span></label>
+          <label><input type="checkbox" class="pck" data-i="${i}" checked><span class="psr-name">${isMat?'<span class="mat-tag sm">材料</span> ':''}${esc(h.n)}${h.sheets?` <span class="sheet-badge">约 ${h.sheets} 张</span>`:''}</span></label>
           <div class="psr-qty">
             <input type="number" class="pq" data-i="${i}" value="${h.q}" min="0" step="0.5" inputmode="decimal">
             ${isMat?`<input type="number" class="pp" data-i="${i}" value="${h.p}" min="0" step="10" inputmode="decimal" title="单价" style="width:58px">`:''}
@@ -2059,7 +2081,10 @@ el.smartResult.addEventListener('click',e=>{
       const pi=el.smartResult.querySelector(`.pp[data-i="${i}"]`);
       const q=qi?(parseFloat(qi.value)||0):h.q;
       const p=pi?(parseFloat(pi.value)||0):h.p;
-      WORK.push({cid:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),kind:'mat',mode:'qty',n:h.n,u:h.u,q,p,note:'门头材料'});
+      // 张数按最终填写的面积实时重算，避免改量后张数对不上
+      const sheets=h.sheets?Math.ceil(q/SHEET_AREA):0;
+      const sheetNote=sheets?' · 约'+sheets+'张':'';
+      WORK.push({cid:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),kind:'mat',mode:'qty',n:h.n,u:h.u,q,p,sheets,wrap:h.wrap,note:'门头材料'+sheetNote});
     }else{
       const qi=el.smartResult.querySelector(`.pq[data-i="${i}"]`);
       const q=qi?(parseFloat(qi.value)||0):1;
@@ -2071,31 +2096,18 @@ el.smartResult.addEventListener('click',e=>{
     toast(SMART_PENDING[0]&&SMART_PENDING[0].type==='custom'?'已加入，填好包干价即可':'已加入 '+added+' 项，工程量已记住'); }
   else toast('没勾选任何项');
 });
-// 材质切换：用当前文字重新按新配方展开
-el.smartResult.addEventListener('change',e=>{
-  if(e.target.id!=='doorMatSel') return;
-  const key=e.target.value;
-  const t=el.smartText.value.trim();
-  const door=tryDoorRecipe(t);
-  if(!door) return;
-  const recipe={key,...DOOR_RECIPES[key]};
-  // 用同样的宽高套数重新展开
-  const ex=expandDoorRecipe(recipe,door.w,door.h,door.qty);
-  const hits=[];
-  ex.work.forEach(x=>{ const it=getWorkItem(x.id); if(!it) return; hits.push({type:'lib',id:x.id,n:it.n,u:it.u,q:x.q,calc:x.calc+' · '+x.note,kw:recipe.label,note:x.note}); });
-  ex.mat.forEach(x=>{ hits.push({type:'mat',n:x.n,u:x.u,q:x.q,p:x.p,calc:x.calc,kw:recipe.label}); });
-  // 保留非门头的附带工序
-  door.hits.forEach(h=>{ if(h.type==='lib'&&!/^(i_door|i_fascia|i_led|i_wire|i_steel|i_ssword|i_acrword|i_banner)$/.test(h.id)&&!ex.work.some(x=>x.id===h.id)) hits.push(h); });
-  // 重新渲染（复用 runSmartParse 的门头渲染块：临时改写文本触发不现实，直接内联渲染）
+// 门头结果渲染（材质切换 / 围边深度改动共用）
+function renderDoorResult(key, door, hits, infoPrefix){
   SMART_PENDING=hits;
   const matCount=hits.filter(h=>h.type==='mat').length, workCount=hits.filter(h=>h.type==='lib').length;
-  let html=`<div class="parse-info">已切换为 <b>${esc(recipe.label)}</b>（${door.w.toFixed(2)}×${door.h.toFixed(2)}米，面积 ${door.area.toFixed(2)}㎡）· <b>${workCount}</b> 项施工 + <b>${matCount}</b> 项材料。数量/单价都可改：</div>`;
+  let html=`<div class="parse-info">${infoPrefix}（${door.w.toFixed(2)}×${door.h.toFixed(2)}米${door.qty>1?' ×'+door.qty+'套':''}，正面 ${door.area.toFixed(2)}㎡ + 侧包 ${door.wrapArea.toFixed(2)}㎡）· <b>${workCount}</b> 项施工 + <b>${matCount}</b> 项材料。数量/单价都可改：</div>`;
   html+=`<div class="door-mat-switch"><label>门头材质</label><select id="doorMatSel">${Object.keys(DOOR_RECIPES).map(k=>`<option value="${k}"${k===key?' selected':''}>${DOOR_RECIPES[k].label}</option>`).join('')}</select></div>`;
+  html+=`<div class="door-mat-switch"><label>围边深度</label><input type="number" id="doorDepth" value="${door.depth}" min="0" max="2" step="0.05" inputmode="decimal" style="width:74px;padding:6px 8px;font-size:12.5px;border:1px solid var(--line);border-radius:7px;background:#fff;font-family:inherit;outline:none"><label>米（侧面包边进深，板材按此算侧包面积）</label></div>`;
   hits.forEach((h,i)=>{
     const isMat=h.type==='mat';
     html+=`<div class="parse-spec-row${isMat?' mat-hit':''}">
       <div class="psr-top">
-        <label><input type="checkbox" class="pck" data-i="${i}" checked><span class="psr-name">${isMat?'<span class="mat-tag sm">材料</span> ':''}${esc(h.n)}</span></label>
+        <label><input type="checkbox" class="pck" data-i="${i}" checked><span class="psr-name">${isMat?'<span class="mat-tag sm">材料</span> ':''}${esc(h.n)}${h.sheets?` <span class="sheet-badge">约 ${h.sheets} 张</span>`:''}</span></label>
         <div class="psr-qty">
           <input type="number" class="pq" data-i="${i}" value="${h.q}" min="0" step="0.5" inputmode="decimal">
           ${isMat?`<input type="number" class="pp" data-i="${i}" value="${h.p}" min="0" step="10" inputmode="decimal" title="单价" style="width:58px">`:''}
@@ -2107,6 +2119,27 @@ el.smartResult.addEventListener('change',e=>{
   });
   html+=`<button class="calib-btn" id="smartAdd" style="margin-top:10px">加入测算</button>`;
   el.smartResult.innerHTML=html;
+}
+// 材质切换 / 围边深度改动：按当前状态重新展开
+el.smartResult.addEventListener('change',e=>{
+  if(e.target.id!=='doorMatSel' && e.target.id!=='doorDepth') return;
+  const t=el.smartText.value.trim();
+  const cur=tryDoorRecipe(t);
+  if(!cur) return;
+  const key=e.target.id==='doorMatSel' ? e.target.value : cur.recipe.key;
+  if(e.target.id==='doorDepth'){
+    const v=parseFloat(e.target.value);
+    DOOR_DEPTH=(v>0?v:0.2);
+  }
+  const recipe={key,...DOOR_RECIPES[key]};
+  const ex=expandDoorRecipe(recipe,cur.w,cur.h,cur.qty,DOOR_DEPTH);
+  const hits=[];
+  ex.work.forEach(x=>{ const it=getWorkItem(x.id); if(!it) return; hits.push({type:'lib',id:x.id,n:it.n,u:it.u,q:x.q,calc:x.calc+' · '+x.note,kw:recipe.label,note:x.note}); });
+  ex.mat.forEach(x=>{ hits.push({type:'mat',n:x.n,u:x.u,q:x.q,p:x.p,sheets:x.sheets,wrap:x.wrap,calc:x.calc,kw:recipe.label}); });
+  // 保留非门头的附带工序
+  cur.hits.forEach(h=>{ if(h.type==='lib'&&!/^(i_door|i_fascia|i_led|i_wire|i_steel|i_ssword|i_acrword|i_banner)$/.test(h.id)&&!ex.work.some(x=>x.id===h.id)) hits.push(h); });
+  const door={...cur,area:ex.area,wrapArea:ex.wrapArea,depth:ex.depth};
+  renderDoorResult(key,door,hits,`已切换为 <b>${esc(recipe.label)}</b>`);
 });
 
 function renderWorkParams(){
