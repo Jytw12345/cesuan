@@ -276,6 +276,13 @@
   .w-grand b{font-variant-numeric:tabular-nums; color:var(--text)}
   .w-grand-total{font-size:13px; font-weight:700; color:var(--brand)}
   .w-grand-total b{font-size:19px; color:var(--money); margin-left:4px}
+  .crew-box{margin-top:8px; padding:9px 11px; background:#f4faf7; border:1px solid #cfe9dc; border-radius:9px; font-size:11.5px; color:var(--sub)}
+  .crew-head{display:flex; justify-content:space-between; align-items:center; gap:8px; color:#0a7a55; font-weight:700; font-size:12px}
+  .crew-head select{font-size:11.5px; padding:3px 6px; border:1px solid #cfe9dc; border-radius:6px; background:#fff; color:var(--text); font-family:inherit; outline:none}
+  .crew-body{margin-top:6px; line-height:1.65}
+  .crew-body b{color:var(--text); font-variant-numeric:tabular-nums}
+  .crew-warn{color:#b45309}
+  .crew-level{display:inline-block; padding:1px 7px; margin-right:5px; border-radius:9px; background:#dcf0e6; color:#0a7a55; font-size:10.5px; font-weight:700}
   .mat-tag{display:inline-block; font-size:9px; padding:1px 5px; border-radius:4px; background:#e6f5ee; color:#0a8a55; font-weight:700; margin-left:5px; vertical-align:middle}
   .mat-tag.sm{margin-left:0}
   .work-row.mat-row{background:#f7fdfa}
@@ -283,8 +290,26 @@
   .door-mat-switch{display:flex; align-items:center; gap:8px; margin:4px 0 10px; padding:8px 10px; background:#f7f9ff; border:1px solid var(--line); border-radius:8px; font-size:12px}
   .door-mat-switch label{color:var(--sub); white-space:nowrap}
   .door-mat-switch select{flex:1; padding:6px 8px; font-size:12.5px; border:1px solid var(--line); border-radius:7px; background:#fff; font-family:inherit; outline:none}
+  .door-frame{margin:2px 0 10px; padding:9px 11px; background:#fffaf2; border:1px solid #f0dcb0; border-radius:8px; font-size:12px; line-height:1.7}
+  .door-frame .df-h{font-weight:700; color:#9a6a12; margin-bottom:4px}
+  .door-frame .df-row{display:flex; flex-wrap:wrap; gap:4px 16px; color:var(--sub)}
+  .door-frame .df-row b{color:var(--text)}
+  .door-frame .df-note{color:var(--faint); font-size:10.5px; margin-top:5px}
+  .door-frame input[type=number]{padding:5px 7px; font-size:12px; border:1px solid var(--line); border-radius:6px; background:#fff; font-family:inherit; outline:none}
   .parse-spec-row.mat-hit{background:#f7fdfa; border-left:2px solid #34a56f}
   .sheet-badge{display:inline-block; margin-left:4px; padding:1px 6px; border-radius:9px; background:#0f6e5622; color:#0a6e4f; font-size:10.5px; font-weight:500; white-space:nowrap}
+  /* 专项测算 */
+  .sp-chip{padding:7px 13px; border:1px solid var(--line); border-radius:16px; background:#fff; font-size:12.5px; color:var(--text); cursor:pointer; font-family:inherit; white-space:nowrap}
+  .sp-chip.active{background:#0a7a4d; color:#fff; border-color:#0a7a4d}
+  .sp-form{margin-top:10px; padding:10px; background:#f7fdfa; border:1px solid #cfe8db; border-radius:9px}
+  .sp-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
+  .sp-grid>div{display:flex; flex-direction:column; gap:3px}
+  .sp-grid label{font-size:11px; color:var(--sub)}
+  .sp-grid input{width:100%; padding:7px 8px; font-size:13px; border:1px solid var(--line); border-radius:7px; background:#fff; font-family:inherit; outline:none}
+  .sp-hint{font-size:10.5px; color:var(--faint); line-height:1.6; margin:8px 0 0}
+  .sp-warn{font-size:11px; color:#a32d2d; background:#fcebeb; border-radius:6px; padding:6px 8px; margin-top:8px; line-height:1.5}
+  .sp-out{margin-top:10px}
+  .sp-sec-t{font-size:12px; font-weight:500; color:var(--text); margin:8px 0 4px; padding-left:2px}
 
   /* 手动添加区 */
   .w-add-btn{width:100%; margin-top:9px; padding:10px; border:1px dashed var(--brand); background:var(--brand-soft); color:var(--brand); border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit}
@@ -481,6 +506,13 @@
       <div id="smartResult"></div>
     </div>
 
+    <!-- ①b 专项测算：脚手架 / 土建基础 / 精神堡垒 -->
+    <div class="card" style="border-color:#bfe3d0">
+      <h2>专项测算 <span style="font-size:11px;color:var(--faint);font-weight:400">脚手架 / 土建基础 / 精神堡垒</span></h2>
+      <div class="tpl-chips" id="specialChips"></div>
+      <div id="specialBody"></div>
+    </div>
+
     <!-- ② 清单：结果 + 施工项 -->
     <div class="card">
       <h2>施工项清单 <span style="font-size:11px;color:var(--faint);font-weight:400">改数量即出价</span></h2>
@@ -539,6 +571,10 @@
         <span>人工费 <b id="wLabor">¥0</b></span>
         <span>设备费 <b id="wEquip">¥0</b></span>
         <span>材料费 <b id="wMat">¥0</b></span>
+      </div>
+      <div class="crew-box" id="crewBox">
+        <div class="crew-head"><span>施工组织建议</span><select id="crewTarget" title="期望完工时间"><option value="auto">不限工期</option><option value="1">1 天完工</option><option value="0.5">半天完工</option></select></div>
+        <div class="crew-body" id="crewBody">先添加施工项，自动给出建议人数与工期。</div>
       </div>
       <div class="w-grand" id="wGrandRow"><span>施工费 <b id="wConstruction">¥0</b> ＋ 材料费 <b id="wMat2">¥0</b></span><span class="w-grand-total">总计 <b id="wGrand">¥0</b></span></div>
     </div>
@@ -734,11 +770,11 @@ const WALL = {
   glass:{label:'玻璃幕墙',    f:1.3}
 };
 
-/* ===== 完整单价库（基于 2026 市场行情中位数，仅供起点参考，务必按本地实际校准） ===== */
+/* ===== 完整单价库（基于三四线城市行情，仅供起点参考，务必按本地实际校准） ===== */
 const DEFAULT_PRICES = {
   // 参与报价计算的核心字段
   install:100, led:80, steel:180, wiring:350, removal:150,
-  transport:200, basket:1000, crane:2000, auxRatio:8
+  transport:200, basket:1000, crane:1200, auxRatio:8
 };
 
 // 分类价目库：key 带 'calc:' 前缀的参与上方报价计算，其余为备查参考价
@@ -786,7 +822,7 @@ const CATALOG = [
   {cat:'⑥ 安装人工', desc:'工时成本核心，磨洋工就出在这一档', rows:[
     ['calc:install','安装人工（普通墙）',100,'元/㎡','6m以下 60–120/㎡，含放线/预埋/接线/密封'],
     ['l_day','普通安装工日薪',280,'元/人·天','250–300'],
-    ['l_highday','高空持证工日薪',700,'元/人·天','600–800（须持证+意外险）'],
+    ['l_highday','高空持证工日薪',600,'元/人·天','三四线600（须持证+意外险）；一线600–800'],
     ['l_weld','钢结构焊接',220,'元/㎡','高空/复杂结构 200–250/㎡'],
     ['calc:wiring','接线调试',350,'元/组','每组含电源/时控；换字不换线减半'],
     ['l_glue','打胶人工',25,'元/延米','耐候结构胶另计材料'],
@@ -794,7 +830,7 @@ const CATALOG = [
   ]},
   {cat:'⑦ 高空设备/机械', desc:'按台班或次，高层项目成本大头', rows:[
     ['calc:basket','吊篮台班',1000,'元/台班','800–1200/天'],
-    ['calc:crane','吊车台班',2000,'元/台班','1500–2800/台班'],
+    ['calc:crane','吊车台班',1200,'元/台班','三四线：随车吊/8吨600–900，12–16吨1100–1500，25吨1800–2000；通用取16吨1200，精神堡垒专项按吨位分档'],
     ['h_cherry','曲臂式高空作业平台',2200,'元/台','1800–2800/台，进出场另计约2000'],
     ['h_hoist','屋面卷扬机',1500,'元/台班','1200–1800（含钢丝绳/滑轮）'],
     ['h_entry','设备进出场费',1200,'元/次',''],
@@ -967,6 +1003,9 @@ const WORK_GROUPS = [
   ]},
   {g:'⑨ 标识标牌 / 展示道具', rows:[
     ['i_doorplate','门牌/科室牌安装','个',0.20,0,0],
+    ['i_hangsign','吊牌/挂牌安装（扎带/吊环）','个',0.10,0,0],
+    ['i_deskcard','桌牌/台卡摆放（含分拣）','个',0.01,0,0],
+    ['i_posterrack','海报架/防风架安装摆放','个',0.25,0,0],
     ['i_floorsign','楼层指示牌安装','个',0.40,0,0],
     ['i_trafficsign','交通标识牌/路牌安装','㎡',0.50,1,1],
     ['i_reflective','反光标牌安装','㎡',0.45,1,1],
@@ -1022,13 +1061,16 @@ const WORK_ITEMS = WORK_GROUPS.flatMap(grp=>grp.rows.map(a=>({
 
 /* 可校准参数：工时单价 + 高度/墙面系数 + 设备费 */
 const WORK_PARAM_DEFAULT = {
-  rateNormal:35,   // 元/工时（普通工，≈280元/天）
-  rateHigh:85,     // 元/工时（高空持证，≈680元/天）
-  hfLow:1.0, hfMid:1.3, hfHigh:1.6,   // 高度降效系数
+  rateNormal:35,   // 元/工时（普通工，三四线≈280元/天）
+  rateHigh:75,     // 元/工时（高空持证，三四线≈600元/天）
+  hfLow:1.0, hfMid:1.15, hfHigh:1.3,  // 高度降效系数（高空单价已含溢价，这里只保留轻度降效，避免重复计价）
   wfFlat:1.0, wfTile:1.2, wfGlass:1.3, // 墙面系数
-  equipMid:1000,   // 6-20m 设备费（吊篮/高空车 元/天）
-  equipHigh:2000,  // >20m 设备费（吊车 元/台班）
-  equipDays:1      // 设备天数
+  equipMid:1000,   // 6-20m 设备费（吊篮/高空车 元/天，三四线800–1200）
+  equipHigh:1200,  // >20m 设备费（吊车 元/台班，三四线16吨级中位；25吨大件1800+自行调高）
+  equipDays:1,     // 设备天数
+  dayHours:8,      // 每人每天标准工时（用来把总工时折成"人天/工期"）
+  helperRatio:0.6, // 小工产能系数（相对师傅，带小工时班组产能=1+该值）
+  crewTarget:'auto'// 施工组织建议的工期目标 auto/1/0.5
 };
 const WORK_PARAM_LABELS = [
   ['rateNormal','普通工工时单价','元/工时'],
@@ -1041,7 +1083,9 @@ const WORK_PARAM_LABELS = [
   ['wfGlass','墙面系数 玻璃幕墙','×'],
   ['equipMid','吊篮/高空车（6-20m）','元/天'],
   ['equipHigh','吊车台班（>20m）','元/台班'],
-  ['equipDays','设备使用天数','天']
+  ['equipDays','设备使用天数','天'],
+  ['dayHours','每人每天标准工时','小时'],
+  ['helperRatio','小工产能系数','×师傅']
 ];
 const WORK_STORE='adQuoteWork_v1';
 
@@ -1100,6 +1144,7 @@ const el={
   workMode:$('workMode'), wChips:$('wChips'), wRows:$('wRows'), wParams:$('wParams'),
   wHeight:$('wHeight'), wWall:$('wWall'), wQuote:$('wQuote'), wCompare:$('wCompare'),
   wHours:$('wHours'), wDays:$('wDays'), wLabor:$('wLabor'), wEquip:$('wEquip'),
+  crewTarget:$('crewTarget'), crewBody:$('crewBody'),
   wMat:$('wMat'), wMat2:$('wMat2'), wGrand:$('wGrand'), wConstruction:$('wConstruction'), wGrandRow:$('wGrandRow'),
   wTotalTop:$('wTotalTop'), wMetaTop:$('wMetaTop'), wAdvLink:$('wAdvLink'), wAdvPanel:$('wAdvPanel'),
   wAddToggle:$('wAddToggle'), wAddPanel:$('wAddPanel'),
@@ -1112,6 +1157,7 @@ const el={
   calibQty:$('calibQty'), calibRun:$('calibRun'), calibResult:$('calibResult'),
   calibApply:$('calibApply'), exportWorkH:$('exportWorkH'),
   smartText:$('smartText'), smartParse:$('smartParse'), sceneChips:$('sceneChips'), smartResult:$('smartResult'),
+  specialChips:$('specialChips'), specialBody:$('specialBody'),
   custAdd:$('custAdd'), caName:$('caName'), caAdd:$('caAdd'), caTip:$('caTip'),
   caFqty:$('caF_qty'), caFdays:$('caF_days'), caFlump:$('caF_lump')
 };
@@ -1174,7 +1220,7 @@ function getCatVal(key){
 
 function catalogHTML(){
   let html=`<div style="font-size:11px;color:var(--faint);line-height:1.6;margin-bottom:4px">
-    基于 2026 市场行情的参考价，务必按本地实际校准。<br>
+    基于三四线城市行情的参考价，务必按本地实际校准。<br>
     <span class="calc-badge">计入</span> = 参与单项速算；其余为备查参考价，改了自动保存。
   </div>`;
   CATALOG.forEach(g=>{
@@ -1191,6 +1237,7 @@ function catalogHTML(){
     });
   });
   html+=`<button class="export-btn js-export">导出完整价目表</button>`;
+  html+=`<button class="export-btn js-reset-price" style="margin-left:8px">↺ 恢复三四线推荐价</button>`;
   html+=`<div class="save-tip js-savetip"></div>`;
   return html;
 }
@@ -1340,6 +1387,12 @@ function setCatVal(key,v){
   });
   box.addEventListener('click',e=>{
     if(e.target.classList.contains('js-export')) exportCatalog();
+    if(e.target.classList.contains('js-reset-price')){
+      if(!confirm('恢复三四线推荐单价？将覆盖当前所有单价（不影响施工费测算的定额与参数）。')) return;
+      P=Object.assign({},DEFAULT_PRICES,{mat:{}});
+      savePrices(); renderPriceBody(); renderMaterials(false); calculate();
+      toast('已恢复三四线推荐单价');
+    }
   });
 });
 
@@ -1602,7 +1655,7 @@ const SMART_DICT = [
   {k:['广告板','广告牌','广告展板','宣传栏','宣传栏组装','宣传橱窗','阅报栏'], id:'i_board'},
   {k:['灯箱','吸塑灯箱','超薄灯箱'], id:'i_lb'},
   {k:['软膜'], id:'i_softfilm'},
-  {k:['标识牌','标牌','导视牌','指示牌','制度牌','规章制度牌','公示牌','公告栏'], id:'i_guide'},
+  {k:['标识牌','标牌','导视牌','指示牌','公示牌','公告栏'], id:'i_guide'},
   {k:['机械挖坑','挖机','挖掘机','机械开挖','机械打坑'], id:'i_pitmach'},
   {k:['混凝土浇筑','浇筑混凝土','打混凝土','混凝土基础','浇筑基础','灌浆'], id:'i_pitcon'},
   {k:['挖坑','栽立柱','栽柱','立柱基础','预埋','基坑','立杆','埋柱'], id:'i_pitbase'},
@@ -1640,7 +1693,10 @@ const SMART_DICT = [
   {k:['防水','补漏'], id:'i_waterproof'},
   {k:['维修','维护'], id:'i_repair'},
   {k:['脚手架'], id:'i_scaffold'},
-  {k:['门牌','楼层牌','科室牌'], id:'i_doorplate'},
+  {k:['门牌','楼层牌','科室牌','制度牌','规章制度牌'], id:'i_doorplate'},
+  {k:['吊牌','吊挂牌','扎带固定','吊挂安装'], id:'i_hangsign'},
+  {k:['桌牌','台卡','桌卡','席位卡'], id:'i_deskcard'},
+  {k:['海报架','防风架','水牌架'], id:'i_posterrack'},
   {k:['精神堡垒','立牌'], id:'i_monument'},
   {k:['易拉宝','展架','x展架'], id:'i_xstand'}
 ];
@@ -1659,6 +1715,121 @@ function renderSceneChips(){
   el.sceneChips.innerHTML=SCENE_COMBOS.map((c,i)=>`<button class="tpl-chip" data-si="${i}">+ ${c.n}</button>`).join('');
 }
 
+/* ===== 专项测算：脚手架 / 土建基础 / 精神堡垒 =====
+   独立表单输入参数 → 展开成施工项(计入施工费) + 材料项(计入材料费)。
+   work 项两种：{kind:'lib',id,q} 走定额；{kind:'cqty',n,u,q,p} 按量×单价计入施工费。
+   mat  项：{n,u,q,p} 走材料费。所有量/单价展开后可改。系数均为经验起点，需按实际校准。 */
+const SPECIAL_CALCS={
+  scaffold:{
+    label:'脚手架',
+    fields:[
+      {k:'h',label:'施工高度(米)',def:6,step:0.5},
+      {k:'w',label:'作业面宽(米)',def:4,step:0.5},
+      {k:'days',label:'使用天数',def:2,step:0.5},
+      {k:'rent',label:'日租(元/组·天)',def:12,step:2},
+      {k:'erect',label:'搭拆人工(元/组)',def:60,step:5}
+    ],
+    hint:'门式脚手架一组≈1.7m高×1.8m宽。平台高=施工高度−1.5m（人站平台够得着）；层数=⌈平台高÷1.7⌉，组数=⌈作业面宽÷1.8⌉。租赁费按 组数×天数 计。',
+    compute(p){
+      const platH=Math.max(0,p.h-1.5);
+      const layers=Math.max(1,Math.ceil(platH/1.7));
+      const groups=Math.max(1,Math.ceil(p.w/1.8));
+      const units=layers*groups;
+      const warn=p.h>7?'高度超过 7 米：需专项施工方案 + 连墙件，四组以上连接稳固；建议让专业架子工搭设。'
+        :p.h>3?'高度超过 3 米：两组须连接稳固、设连墙件，作业层设 1.2m 护栏 + 挡脚板。':'';
+      return {
+        info:`平台高 ${platH.toFixed(1)}m → ${layers} 层 × ${groups} 组 = <b>${units} 组</b>门架单元`,
+        warn,
+        work:[{kind:'cqty',n:'脚手架搭拆人工',u:'组',q:units,p:p.erect,calc:`${layers}层×${groups}组 = ${units}组 × ${p.erect}元`}],
+        mat:[{n:'门式脚手架租赁',u:'组·天',q:units*p.days,p:p.rent,calc:`${units}组 × ${p.days}天 × ${p.rent}元`}]
+      };
+    }
+  },
+  civil:{
+    label:'土建基础',
+    fields:[
+      {k:'L',label:'基础长(米)',def:3.5,step:0.1},
+      {k:'W',label:'基础宽(米)',def:3.5,step:0.1},
+      {k:'D',label:'基础深(米)',def:2.2,step:0.1},
+      {k:'digP',label:'挖坑外运(元/m³)',def:120,step:10},
+      {k:'conP',label:'商品混凝土(元/m³)',def:400,step:10},
+      {k:'steelT',label:'钢筋量(吨)',def:0.5,step:0.1},
+      {k:'steelP',label:'钢筋(元/吨)',def:3800,step:100},
+      {k:'cageP',label:'地笼/预埋件(元/套)',def:3000,step:100}
+    ],
+    hint:'混凝土方量=长×宽×深。挖坑方量按每边+0.3m工作面、深>1.5m放坡，约为基础方量×1.3。地笼=地脚螺栓+定位钢板+箍筋笼，按套算。基础尺寸随高度/风压差异大，这里按参考值填入后可改。',
+    presets:[
+      {n:'5–6m堡垒',v:{L:2.5,W:2.5,D:1.8,steelT:0.3}},
+      {n:'10m堡垒',v:{L:3.5,W:3.5,D:2.2,steelT:0.5}},
+      {n:'15m堡垒',v:{L:4.5,W:4.5,D:2.8,steelT:0.8}}
+    ],
+    compute(p){
+      const vol=p.L*p.W*p.D;
+      const dig=vol*1.3;
+      return {
+        info:`基础 ${p.L}×${p.W}×${p.D}m → 混凝土 <b>${vol.toFixed(2)} m³</b>，挖坑约 <b>${dig.toFixed(2)} m³</b>`,
+        warn:p.D>1.5?'基础深超过 1.5 米：需放坡或支护，现场注意塌方；浇筑前地基要夯实。':'',
+        work:[
+          {kind:'cqty',n:'基坑开挖及渣土外运',u:'m³',q:+dig.toFixed(2),p:p.digP,calc:`基础${vol.toFixed(2)}方 × 1.3(工作面+放坡) = ${dig.toFixed(2)}m³ × ${p.digP}元`}
+        ],
+        mat:[
+          {n:'商品混凝土(C25/C30)',u:'m³',q:+vol.toFixed(2),p:p.conP,calc:`${p.L}×${p.W}×${p.D} = ${vol.toFixed(2)}m³ × ${p.conP}元`},
+          {n:'钢筋',u:'吨',q:p.steelT,p:p.steelP,calc:`${p.steelT}吨 × ${p.steelP}元`},
+          {n:'地笼/预埋件',u:'套',q:1,p:p.cageP,calc:`地脚螺栓+定位钢板+箍筋笼 × ${p.cageP}元`}
+        ]
+      };
+    }
+  },
+  monument:{
+    label:'精神堡垒',
+    fields:[
+      {k:'H',label:'堡垒高度(米)',def:10,step:0.5},
+      {k:'W',label:'正面宽度(米)',def:2,step:0.1},
+      {k:'faceP',label:'面板(元/㎡)',def:280,step:10},
+      {k:'wordP',label:'发光字(元/㎡)',def:500,step:10},
+      {k:'tubeP',label:'主方管(元/米)',def:180,step:10}
+    ],
+    hint:'按高度取基础/钢筋/吊车档位（5–6m / 8–10m / 15m 三档参考）。物料成本（钢架/面板/字/地笼/基础）与安装费（挖坑/吊装/人工/运输）分开列。8m 以上建议结构工程师出计算书。',
+    compute(p){
+      const H=p.H,W=p.W;
+      // 按高度分档取基础尺寸、钢筋、吊车台次
+      let base,rebar,crane,instDay,cranePay,craneTon;
+      if(H<=6){ base=[2.5,2.5,1.8]; rebar=0.3; crane=1; instDay=2; cranePay=900; craneTon='8吨随车吊'; }
+      else if(H<=10){ base=[3.5,3.5,2.2]; rebar=0.5; crane=2; instDay=3; cranePay=1400; craneTon='16吨汽车吊'; }
+      else { base=[4.5,4.5,2.8]; rebar=0.8; crane=2; instDay=4; cranePay=1800; craneTon='25吨汽车吊'; }
+      const [bL,bW,bD]=base;
+      const conVol=bL*bW*bD;
+      const digVol=conVol*1.3;
+      const mainTube=2*H;                    // 2根主立柱
+      const crossTube=Math.ceil(H/0.6)*W;    // 横梁@600mm
+      const faceArea=H*W*1.15;               // 面板(含侧包余量)
+      const wordArea=H*W*0.3;                // 发光字约占正面30%
+      const warn=H>8?'高度超过 8 米：建议结构工程师出抗风计算书，基础按当地基本风压复核（沿海0.7kN/㎡起）。':'';
+      return {
+        info:`${H}m 高×${W}m 宽 → 基础 ${bL}×${bW}×${bD}m，混凝土 ${conVol.toFixed(1)}方，吊装 ${crane} 台次 × ${cranePay}元（${craneTon}·三四线行情）`,
+        warn,
+        work:[
+          {kind:'cqty',n:'基坑开挖及外运',u:'m³',q:+digVol.toFixed(1),p:120,calc:`${conVol.toFixed(1)}方 ×1.3 = ${digVol.toFixed(1)}m³`},
+          {kind:'cqty',n:'吊装(吊车台班·'+craneTon+')',u:'台班',q:crane,p:cranePay,calc:`${crane} 台次 × ${cranePay}元（${craneTon}，三四线行情；按实际吨位可改）`},
+          {kind:'cqty',n:'现场安装人工',u:'人天',q:instDay,p:400,calc:`${instDay} 人天 × 400元`},
+          {kind:'cqty',n:'运输(加长车)',u:'趟',q:1,p:1500,calc:'1 趟 × 1500元'}
+        ],
+        mat:[
+          {n:'主立柱方管',u:'米',q:+mainTube.toFixed(1),p:p.tubeP,calc:`2根 × ${H}m × ${p.tubeP}元`},
+          {n:'横梁方管',u:'米',q:+crossTube.toFixed(1),p:90,calc:`@600mm共${Math.ceil(H/0.6)}道 × ${W}m`},
+          {n:'面板(冷板/不锈钢)',u:'㎡',q:+faceArea.toFixed(1),p:p.faceP,calc:`${H}×${W}×1.15余量 = ${faceArea.toFixed(1)}㎡`},
+          {n:'LED发光字',u:'㎡',q:+wordArea.toFixed(1),p:p.wordP,calc:`正面约30% = ${wordArea.toFixed(1)}㎡`},
+          {n:'地笼/法兰/锚栓',u:'套',q:1,p:H<=6?2500:H<=10?3500:6000,calc:'地脚螺栓+法兰钢板+定位'},
+          {n:'钢筋',u:'吨',q:rebar,p:3800,calc:`${rebar}吨 × 3800元（三四线到场价）`},
+          {n:'商品混凝土',u:'m³',q:+conVol.toFixed(1),p:400,calc:`基础 ${bL}×${bW}×${bD}`},
+          {n:'电气/配电/时控',u:'项',q:1,p:800,calc:'配电箱+变压器+时控'}
+        ]
+      };
+    }
+  }
+};
+let SPECIAL_ACTIVE=null, SPECIAL_PENDING=null;
+
 /* ===== 门头材质配方库：材质 → 施工工序 + 材料清单 =====
    这是"施工费测算"的核心：不同材质的门头，工序和用料本就不同。
    work = 施工项(走工时定额)：{id, u, by}  by=area按面积 / perim按周长 / fixed固定
@@ -1666,6 +1837,13 @@ function renderSceneChips(){
    所有用量/单价展开后都可手动改，系数是经验起点、务必按实际校准。 */
 const SHEET_AREA=2.98;   // 标准板材 1220×2440mm = 2.98㎡/张
 let DOOR_DEPTH=0.2;      // 门头围边深度(米)，智能拆解时可改
+let DOOR_GAP=0.6;        // 门头钢架龙骨间距(米)：行业横400-600/竖600-800，默认0.6；刚性面板按网格算用量
+/* 骨架工艺参数：厚度决定"贴墙平面/立体箱体"，造型决定异形焊点系数。
+   默认厚度=0 → 贴墙单层平面，旧算量与金额完全不变（v429：不污染高频正常路径）。 */
+let DOOR_THICK=0;        // 骨架立体厚度(米)：0=贴墙平面；>0 按前后双层框架+侧撑算方管与焊点
+let DOOR_SHAPE='rect';   // 门头造型：rect规则 / slant斜边凹凸 / arc圆弧异形
+const SHAPE_FACTOR={rect:1, slant:1.25, arc:1.5}; // 异形焊点/焊接降效系数
+const WELD_H_PER_PT=0.12;// 单点焊接参考工时(小时)：定位+点焊+清渣≈7分钟/点，仅用于对账、不进金额
 const DOOR_RECIPES = {
   alc:{ label:'铝塑板发光字门头', match:['铝塑板','铝板','铝塑'], glow:true,
     work:[
@@ -1675,8 +1853,8 @@ const DOOR_RECIPES = {
       {id:'i_wire',   by:'fixed', k:1,   u:'组', note:'接线调试'}
     ],
     mat:[
-      {n:'热镀锌方管',        u:'米', by:'perim', k:2,   p:24},
-      {n:'木方（基层）',      u:'米', by:'area',  k:2,   p:9},
+      {n:'热镀锌方管(骨架)',  u:'米', by:'grid', gridDir:'both', k:1, p:24},
+      {n:'木方(基层)',        u:'米', by:'grid', gridDir:'h',    k:1, p:9},
       {n:'铝塑板',            u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'发光字',            u:'㎡', by:'area',  k:0.4, p:600},
       {n:'LED灯条',           u:'米', by:'perim', k:1.5, p:18},
@@ -1692,7 +1870,7 @@ const DOOR_RECIPES = {
       {id:'i_wire',   by:'fixed', k:1,   u:'组', note:'接线调试'}
     ],
     mat:[
-      {n:'热镀锌方管',     u:'米', by:'perim', k:2,   p:24},
+      {n:'热镀锌方管(骨架)',u:'米', by:'grid', gridDir:'both', k:1, p:24},
       {n:'不锈钢板包边',   u:'㎡', by:'area',  k:0.5, p:320, sheet:true, wrap:true},
       {n:'不锈钢发光字',   u:'㎡', by:'area',  k:0.4, p:750},
       {n:'LED灯条',        u:'米', by:'perim', k:1.5, p:18},
@@ -1706,7 +1884,7 @@ const DOOR_RECIPES = {
       {id:'i_glue',   by:'perim',k:1, u:'米', note:'打胶密封'}
     ],
     mat:[
-      {n:'热镀锌方管',  u:'米', by:'perim', k:2,   p:24},
+      {n:'热镀锌方管(骨架)',u:'米', by:'grid', gridDir:'both', k:1, p:24},
       {n:'亚克力面板',  u:'㎡', by:'area',  k:1.05,p:280, sheet:true, wrap:true},
       {n:'结构胶',      u:'支', by:'perim', k:0.3, p:25}
     ]
@@ -1718,7 +1896,7 @@ const DOOR_RECIPES = {
       {id:'i_acrword',by:'area', k:0.3, u:'㎡', note:'PVC字安装'}
     ],
     mat:[
-      {n:'热镀锌方管', u:'米', by:'perim', k:2,   p:24},
+      {n:'热镀锌方管(骨架)',u:'米', by:'grid', gridDir:'both', k:1, p:24},
       {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'PVC字',      u:'㎡', by:'area',  k:0.3, p:180}
     ]
@@ -1741,8 +1919,8 @@ const DOOR_RECIPES = {
       {id:'i_wire',   by:'fixed', k:1,   u:'组', note:'接线调试'}
     ],
     mat:[
-      {n:'热镀锌方管', u:'米', by:'perim', k:2,   p:24},
-      {n:'木方（基层）',u:'米',by:'area',  k:2,   p:9},
+      {n:'热镀锌方管(骨架)',u:'米', by:'grid', gridDir:'both', k:1, p:24},
+      {n:'木方(基层)',  u:'米', by:'grid', gridDir:'h',    k:1, p:9},
       {n:'铝塑板',     u:'㎡', by:'area',  k:1.1, p:110, sheet:true, wrap:true},
       {n:'发光字',     u:'㎡', by:'area',  k:0.4, p:600},
       {n:'LED灯条',    u:'米', by:'perim', k:1.5, p:18},
@@ -1762,13 +1940,30 @@ function matchDoorRecipe(t){
 }
 // 把配方按尺寸展开成 {work:[{id,q,note}], mat:[{n,u,q,p,sheets}]}，w/h 单位米
 // sheet:true 的板材按标准张算张数；wrap:true 的板材用量要加侧包围（周长×深度）
-function expandDoorRecipe(recipe, w, h, qty, depth){
+function expandDoorRecipe(recipe, w, h, qty, depth, gap, thick, shape){
   const qtyN=qty>0?qty:1;
   const area=w*h*qtyN;              // 正面总面积
   const perim=2*(w+h)*qtyN;         // 总周长（米）
   const dep=(depth>0?depth:DOOR_DEPTH);
   const wrapArea=perim*dep;         // 侧包围展开面积 = 周长 × 围边深度
+  const gp=(gap>0?gap:DOOR_GAP);    // 龙骨间距（米）
+  // 网格骨架：竖龙骨沿"高"立、按"宽"分布；横龙骨沿"宽"躺、按"高"分布
+  // 竖根数=⌈宽/间距⌉+1，横根数=⌈高/间距⌉+1（两端各一根）
+  const vN=Math.ceil(w/gp)+1, hN=Math.ceil(h/gp)+1;
+  const vLen=vN*h, hLen=hN*w;       // 单套竖/横龙骨总长（米）
   const by={area, perim, fixed:qtyN};
+  // ===== 骨架工艺参数（厚度/造型）：厚度>0 才是立体箱体，否则贴墙单层，保持原算量 =====
+  const tk=(thick>0?thick:0);                 // 骨架立体厚度（米）
+  const layers=tk>0?2:1;                      // 立体箱体前后两层骨架；平面一层
+  const shp=shape||'rect';
+  const shapeK=SHAPE_FACTOR[shp]||1;          // 异形焊点系数
+  // 连接撑：沿周长每 gp 一根，把前后两层骨架连成箱体；每根长=厚度
+  const braceN=tk>0?Math.max(4,Math.round(2*(w+h)/gp))*qtyN:0;
+  const braceLen=braceN*tk;                   // 连接撑方管总长（米）
+  const gridNodes=vN*hN*layers*qtyN;          // 网格交叉焊点（双层加倍）
+  const weldPts=Math.round(gridNodes*shapeK)+braceN*2; // 交叉点焊 + 每根撑两端各一焊
+  const weldHrs=Math.round(weldPts*WELD_H_PER_PT*10)/10;// 参考焊接工时（对账用，不进金额）
+  const frame={thick:tk,shape:shp,shapeK,layers,gap:gp,vN,hN,braceN,braceLen,gridNodes,weldPts,weldHrs};
   const rnd=(x)=>Math.round(x*100)/100;
   const work=recipe.work.map(x=>({
     id:x.id, q:rnd(by[x.by]*x.k), note:x.note, u:x.u,
@@ -1779,7 +1974,16 @@ function expandDoorRecipe(recipe, w, h, qty, depth){
     const baseArea=x.wrap ? area+wrapArea : area;
     const areaQty=baseArea*x.k;
     let q, calc;
-    if(x.u==='㎡'&&x.by==='area'){
+    if(x.by==='grid'){
+      // 刚性面板骨架：按龙骨网格算真实米数（横≤600/竖600-800 行业做法）
+      const dir=x.gridDir||'both';
+      const oneLen=dir==='v'?vLen : dir==='h'?hLen : vLen+hLen;
+      q=Math.max(1,Math.round(oneLen*qtyN*x.k))*layers; // 立体箱体前后两层骨架，米数翻倍
+      const detail=dir==='v'?`竖${vN}根×${h}m=${vLen.toFixed(1)}米`
+        : dir==='h'?`横${hN}根×${w}m=${hLen.toFixed(1)}米`
+        : `竖${vN}根×${h}m + 横${hN}根×${w}m = ${(vLen+hLen).toFixed(1)}米`;
+      calc=`@${gp}m间距 ${detail}`+(qtyN>1?` × ${qtyN}套`:'')+(x.k!==1?` × ${x.k}`:'')+(layers>1?` ×2层=${q}米`:'');
+    }else if(x.u==='㎡'&&x.by==='area'){
       q=Math.max(1,rnd(areaQty));
       calc=x.wrap
         ? `正面${area.toFixed(2)} + 侧包${wrapArea.toFixed(2)}(${dep}米深) = ${baseArea.toFixed(2)}㎡ × ${x.k}`
@@ -1792,7 +1996,34 @@ function expandDoorRecipe(recipe, w, h, qty, depth){
     if(sheets) calc+=` → 约 ${sheets} 张（${SHEET_AREA}㎡/张）`;
     return {n:x.n,u:x.u,q,p:x.p,sheets,wrap:!!x.wrap,calc};
   });
-  return {work,mat,area,perim,wrapArea,depth:dep};
+  // 立体箱体：厚度连接撑方管（前后两层之间的横向连接杆）单独列一项材料
+  if(tk>0 && braceLen>0){
+    mat.push({n:'方管(双层连接撑)',u:'米',q:Math.round(braceLen),p:24,sheets:0,wrap:false,
+      calc:`厚度${tk}m × 连接撑${braceN}根 = ${braceLen.toFixed(1)}米`});
+  }
+  return {work,mat,area,perim,wrapArea,depth:dep,gap:gp,vN,hN,frame};
+}
+// 骨架与焊点参数面板（对账参考，默认不计入金额）
+function doorFrameHtml(f){
+  if(!f) return '';
+  const structure=f.thick>0?`立体双层箱体（前后 ${f.layers} 层骨架）`:'贴墙单层平面骨架';
+  const shapeSel=`<select id="doorShape" style="width:auto;min-width:110px;padding:5px 7px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:inherit;outline:none">
+    ${[['rect','规则矩形 ×1.0'],['slant','斜边/凹凸 ×1.25'],['arc','圆弧造型 ×1.5']].map(([v,t])=>`<option value="${v}"${v===f.shape?' selected':''}>${t}</option>`).join('')}</select>`;
+  return `<div class="door-frame">
+    <div class="df-h">骨架与焊点测算 · 对账参数</div>
+    <div class="df-row">
+      <span>骨架厚度 <input type="number" id="doorThick" value="${f.thick}" min="0" max="2" step="0.05" inputmode="decimal" style="width:66px"> 米</span>
+      <span>结构 <b>${structure}</b></span>
+      <span>造型 ${shapeSel}</span>
+    </div>
+    <div class="df-row">
+      <span>网格焊点 <b>${f.gridNodes}</b> 点${f.shapeK!==1?`（${f.shape} 系数 ×${f.shapeK}）`:''}</span>
+      ${f.braceN?`<span>厚度连接撑 <b>${f.braceN}</b> 根 × ${f.thick}m = <b>${f.braceLen.toFixed(1)}</b> 米</span>`:''}
+      <span>焊点合计 <b>${f.weldPts}</b> 点</span>
+    </div>
+    <div class="df-row"><span>参考焊接工时 <b>${f.weldHrs}</b> 工时（${WELD_H_PER_PT}h/点）</span></div>
+    <div class="df-note">厚度&gt;0 时骨架方管按双层计、并列出连接撑材料（计入材料费）。焊点数与焊接工时为客观对账依据，默认不计入金额；现行钢架焊接仍按面积定额计价。改厚度/造型后明细自动重算。</div>
+  </div>`;
 }
 /* ===== 规格智能解析：数量 + 尺寸 + 项目名 → 工程量 =====
    支持写法：5个1.2*2.4无框画 / 4个60.90的制度牌 / 30个门牌 / 6米×2米门头
@@ -1946,7 +2177,7 @@ function tryDoorRecipe(t){
   // 排除被当作尺寸的数字（尺寸后紧跟乘号的不算数量）
   if(qm){ const before=t.slice(0,qm.index); if(!/[×x*＊.]\s*$/.test(before)) qty=parseFloat(qm[1])||1; }
   const recipe=matchDoorRecipe(t);
-  const ex=expandDoorRecipe(recipe,w,h,qty,DOOR_DEPTH);
+  const ex=expandDoorRecipe(recipe,w,h,qty,DOOR_DEPTH,DOOR_GAP,DOOR_THICK,DOOR_SHAPE);
   const hits=[];
   // 施工项
   ex.work.forEach(x=>{
@@ -1966,7 +2197,7 @@ function tryDoorRecipe(t){
     if(e.type==='lib'&&/^(i_door|i_fascia|i_led|i_wire|i_steel|i_ssword|i_acrword|i_banner)$/.test(e.id)) return;
     hits.push(e);
   });
-  return {hits,recipe,area:ex.area,perim:ex.perim,wrapArea:ex.wrapArea,depth:ex.depth,w,h,qty};
+  return {hits,recipe,area:ex.area,perim:ex.perim,wrapArea:ex.wrapArea,depth:ex.depth,gap:ex.gap,w,h,qty,frame:ex.frame};
 }
 let SMART_PENDING=null;
 // 把原文按标点/换行拆成条目，用于识别不出时的兜底
@@ -1988,6 +2219,8 @@ function runSmartParse(){
     // 材质切换下拉 + 围边深度
     html+=`<div class="door-mat-switch"><label>门头材质</label><select id="doorMatSel">${Object.keys(DOOR_RECIPES).map(k=>`<option value="${k}"${k===door.recipe.key?' selected':''}>${DOOR_RECIPES[k].label}</option>`).join('')}</select></div>`;
     html+=`<div class="door-mat-switch"><label>围边深度</label><input type="number" id="doorDepth" value="${door.depth}" min="0" max="2" step="0.05" inputmode="decimal" style="width:74px;padding:6px 8px;font-size:12.5px;border:1px solid var(--line);border-radius:7px;background:#fff;font-family:inherit;outline:none"><label>米（侧面包边进深，板材按此算侧包面积）</label></div>`;
+    if(door.recipe.mat.some(x=>x.by==='grid')) html+=`<div class="door-mat-switch"><label>龙骨间距</label><select id="doorGap">${[[0.4,'0.4m 加密（大板/高风压）'],[0.5,'0.5m 常用'],[0.6,'0.6m 默认（横龙骨上限）'],[0.8,'0.8m 省料（竖龙骨上限）']].map(([v,t])=>`<option value="${v}"${Math.abs(v-door.gap)<0.01?' selected':''}>${t}</option>`).join('')}</select><label>方管/木方按此网格算量</label></div>`;
+    html+=doorFrameHtml(door.frame);
     door.hits.forEach((h,i)=>{
       const isMat=h.type==='mat';
       html+=`<div class="parse-spec-row${isMat?' mat-hit':''}">
@@ -2059,6 +2292,81 @@ function runSmartParse(){
   el.smartResult.innerHTML=html;
 }
 el.smartParse.addEventListener('click',runSmartParse);
+
+/* ---- 专项测算：渲染 / 计算 / 加入 ---- */
+function renderSpecialChips(){
+  el.specialChips.innerHTML=Object.keys(SPECIAL_CALCS).map(k=>`<button class="sp-chip${SPECIAL_ACTIVE===k?' active':''}" data-sk="${k}">${SPECIAL_CALCS[k].label}</button>`).join('');
+}
+function openSpecial(key){
+  SPECIAL_ACTIVE=key; SPECIAL_PENDING=null; renderSpecialChips();
+  const c=SPECIAL_CALCS[key];
+  let html=`<div class="sp-form"><div class="sp-grid">`;
+  c.fields.forEach(f=>{
+    html+=`<div><label>${f.label}</label><input type="number" data-sk2="${f.k}" value="${f.def}" step="${f.step}" min="0" inputmode="decimal"></div>`;
+  });
+  html+=`</div><p class="sp-hint">${c.hint}</p>`;
+  if(c.presets) html+=`<div class="tpl-chips" style="margin-top:8px">${c.presets.map((ps,i)=>`<button class="tpl-chip" data-ps="${i}">${ps.n}尺寸</button>`).join('')}</div>`;
+  html+=`<button class="calib-btn" id="spCalc" style="margin-top:10px">算出明细 →</button><div id="spOut"></div></div>`;
+  el.specialBody.innerHTML=html;
+}
+function runSpecialCalc(){
+  const c=SPECIAL_CALCS[SPECIAL_ACTIVE]; if(!c) return;
+  const p={};
+  el.specialBody.querySelectorAll('[data-sk2]').forEach(inp=>{ p[inp.dataset.sk2]=parseFloat(inp.value)||0; });
+  const r=c.compute(p);
+  SPECIAL_PENDING=r;
+  let html=`<div class="sp-out"><div class="parse-info">${r.info}</div>`;
+  if(r.warn) html+=`<div class="sp-warn">⚠️ ${r.warn}</div>`;
+  html+=`<div class="sp-sec-t">施工项 · 计入施工费</div>`;
+  r.work.forEach((w,i)=>{
+    html+=`<div class="parse-spec-row"><div class="psr-top"><label><input type="checkbox" class="spck" data-t="w" data-i="${i}" checked><span class="psr-name">${esc(w.n)}</span></label>
+      <div class="psr-qty"><input type="number" class="spq" data-t="w" data-i="${i}" value="${w.q}" min="0" step="0.5" inputmode="decimal" style="width:64px"><input type="number" class="spp" data-t="w" data-i="${i}" value="${w.p}" min="0" step="10" inputmode="decimal" style="width:60px"><span class="pu">${esc(w.u)} / ¥</span></div></div>
+      ${w.calc?`<div class="psr-calc">${esc(w.calc)}</div>`:''}</div>`;
+  });
+  html+=`<div class="sp-sec-t">材料项 · 计入材料费</div>`;
+  r.mat.forEach((m,i)=>{
+    html+=`<div class="parse-spec-row mat-hit"><div class="psr-top"><label><input type="checkbox" class="spck" data-t="m" data-i="${i}" checked><span class="psr-name"><span class="mat-tag sm">材料</span> ${esc(m.n)}</span></label>
+      <div class="psr-qty"><input type="number" class="spq" data-t="m" data-i="${i}" value="${m.q}" min="0" step="0.5" inputmode="decimal" style="width:64px"><input type="number" class="spp" data-t="m" data-i="${i}" value="${m.p}" min="0" step="10" inputmode="decimal" style="width:60px"><span class="pu">${esc(m.u)} / ¥</span></div></div>
+      ${m.calc?`<div class="psr-calc">${esc(m.calc)}</div>`:''}</div>`;
+  });
+  html+=`<button class="calib-btn" id="spAdd" style="margin-top:10px">加入测算</button></div>`;
+  el.specialBody.querySelector('#spOut').innerHTML=html;
+}
+el.specialChips.addEventListener('click',e=>{
+  const b=e.target.closest('.sp-chip'); if(!b) return;
+  openSpecial(b.dataset.sk);
+});
+el.specialBody.addEventListener('click',e=>{
+  if(e.target.id==='spCalc'){ runSpecialCalc(); return; }
+  const ps=e.target.closest('[data-ps]');
+  if(ps && SPECIAL_CALCS[SPECIAL_ACTIVE].presets){
+    const v=SPECIAL_CALCS[SPECIAL_ACTIVE].presets[parseInt(ps.dataset.ps)].v;
+    Object.keys(v).forEach(k=>{ const inp=el.specialBody.querySelector(`[data-sk2="${k}"]`); if(inp) inp.value=v[k]; });
+    return;
+  }
+  if(e.target.id==='spAdd' && SPECIAL_PENDING){
+    let added=0;
+    SPECIAL_PENDING.work.forEach((w,i)=>{
+      const box=el.specialBody.querySelector(`.spck[data-t="w"][data-i="${i}"]`); if(!box||!box.checked) return;
+      const qi=el.specialBody.querySelector(`.spq[data-t="w"][data-i="${i}"]`), pi=el.specialBody.querySelector(`.spp[data-t="w"][data-i="${i}"]`);
+      const q=qi?parseFloat(qi.value)||0:w.q, p=pi?parseFloat(pi.value)||0:w.p;
+      if(w.kind==='lib') WORK.push({id:w.id,q:q});
+      else WORK.push({cid:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),mode:'qty',n:w.n,u:w.u,q:q,p:p,note:'专项测算'});
+      added++;
+    });
+    SPECIAL_PENDING.mat.forEach((m,i)=>{
+      const box=el.specialBody.querySelector(`.spck[data-t="m"][data-i="${i}"]`); if(!box||!box.checked) return;
+      const qi=el.specialBody.querySelector(`.spq[data-t="m"][data-i="${i}"]`), pi=el.specialBody.querySelector(`.spp[data-t="m"][data-i="${i}"]`);
+      const q=qi?parseFloat(qi.value)||0:m.q, p=pi?parseFloat(pi.value)||0:m.p;
+      WORK.push({cid:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),kind:'mat',mode:'qty',n:m.n,u:m.u,q:q,p:p,note:'专项材料'});
+      added++;
+    });
+    if(added){ saveWork(); renderWorkRows(); toast('已加入 '+added+' 项，工程量/单价可改'); }
+    else toast('没勾选任何项');
+  }
+});
+renderSpecialChips();
+
 el.sceneChips.addEventListener('click',e=>{
   const b=e.target.closest('.tpl-chip'); if(!b) return;
   const c=SCENE_COMBOS[parseInt(b.dataset.si)];
@@ -2103,6 +2411,8 @@ function renderDoorResult(key, door, hits, infoPrefix){
   let html=`<div class="parse-info">${infoPrefix}（${door.w.toFixed(2)}×${door.h.toFixed(2)}米${door.qty>1?' ×'+door.qty+'套':''}，正面 ${door.area.toFixed(2)}㎡ + 侧包 ${door.wrapArea.toFixed(2)}㎡）· <b>${workCount}</b> 项施工 + <b>${matCount}</b> 项材料。数量/单价都可改：</div>`;
   html+=`<div class="door-mat-switch"><label>门头材质</label><select id="doorMatSel">${Object.keys(DOOR_RECIPES).map(k=>`<option value="${k}"${k===key?' selected':''}>${DOOR_RECIPES[k].label}</option>`).join('')}</select></div>`;
   html+=`<div class="door-mat-switch"><label>围边深度</label><input type="number" id="doorDepth" value="${door.depth}" min="0" max="2" step="0.05" inputmode="decimal" style="width:74px;padding:6px 8px;font-size:12.5px;border:1px solid var(--line);border-radius:7px;background:#fff;font-family:inherit;outline:none"><label>米（侧面包边进深，板材按此算侧包面积）</label></div>`;
+  if(DOOR_RECIPES[key].mat.some(x=>x.by==='grid')) html+=`<div class="door-mat-switch"><label>龙骨间距</label><select id="doorGap">${[[0.4,'0.4m 加密（大板/高风压）'],[0.5,'0.5m 常用'],[0.6,'0.6m 默认（横龙骨上限）'],[0.8,'0.8m 省料（竖龙骨上限）']].map(([v,t])=>`<option value="${v}"${Math.abs(v-(door.gap||DOOR_GAP))<0.01?' selected':''}>${t}</option>`).join('')}</select><label>方管/木方按此网格算量</label></div>`;
+  html+=doorFrameHtml(door.frame);
   hits.forEach((h,i)=>{
     const isMat=h.type==='mat';
     html+=`<div class="parse-spec-row${isMat?' mat-hit':''}">
@@ -2122,24 +2432,35 @@ function renderDoorResult(key, door, hits, infoPrefix){
 }
 // 材质切换 / 围边深度改动：按当前状态重新展开
 el.smartResult.addEventListener('change',e=>{
-  if(e.target.id!=='doorMatSel' && e.target.id!=='doorDepth') return;
+  const id=e.target.id;
+  if(id!=='doorMatSel' && id!=='doorDepth' && id!=='doorGap' && id!=='doorThick' && id!=='doorShape') return;
   const t=el.smartText.value.trim();
   const cur=tryDoorRecipe(t);
   if(!cur) return;
-  const key=e.target.id==='doorMatSel' ? e.target.value : cur.recipe.key;
-  if(e.target.id==='doorDepth'){
+  const key=id==='doorMatSel' ? e.target.value : cur.recipe.key;
+  if(id==='doorDepth'){
     const v=parseFloat(e.target.value);
     DOOR_DEPTH=(v>0?v:0.2);
   }
+  if(id==='doorGap'){
+    DOOR_GAP=parseFloat(e.target.value)||0.6;
+  }
+  if(id==='doorThick'){
+    const v=parseFloat(e.target.value);
+    DOOR_THICK=(v>0?v:0);
+  }
+  if(id==='doorShape'){
+    DOOR_SHAPE=e.target.value;
+  }
   const recipe={key,...DOOR_RECIPES[key]};
-  const ex=expandDoorRecipe(recipe,cur.w,cur.h,cur.qty,DOOR_DEPTH);
+  const ex=expandDoorRecipe(recipe,cur.w,cur.h,cur.qty,DOOR_DEPTH,DOOR_GAP,DOOR_THICK,DOOR_SHAPE);
   const hits=[];
   ex.work.forEach(x=>{ const it=getWorkItem(x.id); if(!it) return; hits.push({type:'lib',id:x.id,n:it.n,u:it.u,q:x.q,calc:x.calc+' · '+x.note,kw:recipe.label,note:x.note}); });
   ex.mat.forEach(x=>{ hits.push({type:'mat',n:x.n,u:x.u,q:x.q,p:x.p,sheets:x.sheets,wrap:x.wrap,calc:x.calc,kw:recipe.label}); });
   // 保留非门头的附带工序
   cur.hits.forEach(h=>{ if(h.type==='lib'&&!/^(i_door|i_fascia|i_led|i_wire|i_steel|i_ssword|i_acrword|i_banner)$/.test(h.id)&&!ex.work.some(x=>x.id===h.id)) hits.push(h); });
-  const door={...cur,area:ex.area,wrapArea:ex.wrapArea,depth:ex.depth};
-  renderDoorResult(key,door,hits,`已切换为 <b>${esc(recipe.label)}</b>`);
+  const door={...cur,area:ex.area,wrapArea:ex.wrapArea,depth:ex.depth,gap:ex.gap,frame:ex.frame};
+  renderDoorResult(key,door,hits,`已按当前骨架参数重算（<b>${esc(recipe.label)}</b>）`);
 });
 
 function renderWorkParams(){
@@ -2151,8 +2472,9 @@ function renderWorkParams(){
     </div>`).join('')+
     `<div style="font-size:10.5px;color:var(--faint);line-height:1.6;margin-top:8px">
       工时单价默认按普通工 280元/天≈35元/时、高空持证≈680元/天算。
-      高度系数是降效补偿（越高越慢），墙面系数是施工难度补偿。按本地实际校准。
-    </div>`;
+      高度系数是降效补偿（越高越慢，已含在高空单价溢价内，勿叠太高），墙面系数是施工难度补偿。按本地实际校准。
+    </div>`+
+    `<button class="export-btn" id="resetWParams" style="margin-top:8px">↺ 恢复推荐参数值</button>`;
 }
 
 /* ---- 逐项定额编辑 ---- */
@@ -2325,6 +2647,39 @@ function renderWorkRows(){
   calcWork();
 }
 
+/* 施工组织建议：把总工时翻译成"几人/几天/要不要加班"。
+   注意：只做建议，不参与金额计算——人工费仍按总工时×标准单价，作为识破虚高的基准。
+   H=总工时；target='auto'|'1'|'0.5'；返回 {daysPlan,masters,helpers,people,perDay,otHrs,teamDays,tip} */
+function calcCrew(H, target, p){
+  if(!H||H<=0) return null;
+  const dh=(p.dayHours>0?p.dayHours:8);
+  const ratio=(p.helperRatio>=0?p.helperRatio:0.6);
+  const teamDay=dh*(1+ratio);          // 1师1小每天的产能（工时）
+  // 目标工期：auto=合理班组(每位师傅摊约1.5天活量)；限期=指定天数
+  const isAuto=(target==='auto');
+  const T=isAuto?1.5:(parseFloat(target)||1);
+  const perDay=H/T;                    // 每天需完成的工时
+  // 小工只做辅助，按师傅数配比：1师→1小 / 2师→1小 / 3师→2小 / 4师→2小 …
+  const helpersFor=(m)=>Math.max(1,Math.round(m*0.6));
+  // 师傅为主力：求最小师傅数 m，使「m 师傅 + 配套小工」日产能 ≥ 每天需求
+  let masters=1;
+  while(masters<30){
+    if(masters*dh+helpersFor(masters)*dh*ratio >= perDay-1e-9) break;
+    masters++;
+  }
+  const helpers=helpersFor(masters);
+  const people=masters+helpers;
+  const crewCap=masters*dh+helpers*dh*ratio;    // 推荐班组的每天产能
+  const planDays=Math.round(H/crewCap*10)/10;   // 该班组实际需要几天
+  const teamDays=Math.round(H/teamDay*10)/10;   // 只用 1师1小 需要几天
+  // 活量复杂度：让建议更可解释
+  const level=H<=8?'轻活':H<=19?'一般活':H<=38?'较复杂':H<=70?'复杂活':'大工程';
+  // 加班兜底：只有限期时提示；意思是"若只维持 2 人班组"要加多少班
+  let otHrs=0;
+  if(!isAuto && H>teamDay*T) otHrs=Math.round(Math.max(0,(H-teamDay*T)/(T*2))*10)/10;
+  return {masters,helpers,people,perDay,otHrs,teamDays,planDays,dh,ratio,target,crewCap,level};
+}
+
 function calcWork(){
   const p=WP.params;
   let totalHours=0, labor=0, matFee=0;
@@ -2378,7 +2733,37 @@ function calcWork(){
       el.wCompare.innerHTML=`标准施工费 <b>${money(total)}</b>，工程部报价低 <span class="ok">${money(-diff)}</span>，报价合理甚至偏低。`;
     }
   }
-  return {totalHours,days,labor,equip,matFee,construction,grand,total};
+  // 施工组织建议（只建议，不改金额）
+  const crew=calcCrew(totalHours,p.crewTarget||'auto',p);
+  if(el.crewBody){
+    if(!crew){
+      el.crewBody.textContent='先添加施工项，自动给出建议人数与工期。';
+    }else{
+      const cf=(x)=>x.toFixed(1).replace(/\.0$/,'');
+      const teamName=(m,h)=>m&&h?`${m} 师傅 + ${h} 小工（共 ${m+h} 人）`:m?`${m} 师傅（${m} 人）`:`${h} 小工（${h} 人）`;
+      let body='';
+      if(crew.target==='auto'){
+        if(crew.masters===1){
+          body=`<span class="crew-level">${crew.level}</span> 建议 <b>${teamName(crew.masters,crew.helpers)}</b>，约 <b>${cf(crew.planDays)} 天</b>干完。师傅带一个小工，外出 2 人稳妥。`;
+        }else{
+          body=`<span class="crew-level">${crew.level}</span> 建议 <b>${teamName(crew.masters,crew.helpers)}</b>，约 <b>${cf(crew.planDays)} 天</b>干完。以师傅为主并行作业、小工辅助递料。`;
+        }
+      }else{
+        const label=crew.target==='0.5'?'半天':'1 天';
+        body=`<span class="crew-level">${crew.level}</span> ${label}完工建议 <b>${teamName(crew.masters,crew.helpers)}</b>。`;
+        if(crew.otHrs>crew.dh){
+          body+=`<br><span class="crew-warn">2 人（1 师傅+1 小工）干不完，${label}需加班 ${cf(crew.otHrs)} 小时/人·天，已超出一个工作日——直接按上面加派师傅更稳。</span>`;
+        }else if(crew.otHrs>0){
+          body+=`<br><span class="crew-warn">若只派 2 人（1 师傅+1 小工）：需加班约 <b>${cf(crew.otHrs)} 小时/人·天</b>才赶得完，建议按上面加派师傅。</span>`;
+        }else{
+          body+=`<br>单靠 1 师傅+1 小工约 ${cf(crew.teamDays)} 天，${label}内可完成，无需加班。`;
+        }
+      }
+      body+=`<br><span style="color:var(--faint)">师傅为主力、小工按 ${cf(crew.ratio)} 产能折算配比；人数为经验估算，加班工资未计入标准费。</span>`;
+      el.crewBody.innerHTML=body;
+    }
+  }
+  return {totalHours,days,labor,equip,matFee,construction,grand,total,crew};
 }
 
 el.wSearch.addEventListener('input',renderWorkChips);
@@ -2445,10 +2830,26 @@ el.wRows.addEventListener('click',e=>{
   saveWork(); renderWorkRows();
 });
 
+// 工期目标下拉：回显 + 记忆
+if(el.crewTarget){
+  el.crewTarget.value=WP.params.crewTarget||'auto';
+  el.crewTarget.addEventListener('change',()=>{
+    WP.params.crewTarget=el.crewTarget.value;
+    saveWork(); calcWork();
+  });
+}
 el.wParams.addEventListener('input',e=>{
   const k=e.target.dataset.wp; if(!k) return;
   const v=parseFloat(e.target.value); WP.params[k]=isNaN(v)?0:v;
   saveWork(); calcWork();
+});
+el.wParams.addEventListener('click',e=>{
+  if(e.target.id!=='resetWParams') return;
+  if(!confirm('恢复推荐参数值？将覆盖当前工时单价/系数/设备费（不影响逐项定额校准）。')) return;
+  WP.params=Object.assign({},WORK_PARAM_DEFAULT);
+  if(el.crewTarget) el.crewTarget.value=WP.params.crewTarget;
+  saveWork(); renderWorkParams(); calcWork();
+  toast('已恢复推荐参数值');
 });
 [el.wHeight,el.wWall].forEach(x=>x.addEventListener('change',()=>{ saveWork(); calcWork(); }));
 el.wQuote.addEventListener('input',calcWork);
@@ -2612,7 +3013,7 @@ function generateQuoteImage(){
   });
   // 合计区
   y+=8;
-  ctx.fillStyle='#f4f6fa'; ctx.fillRect(pad,y-24,W-pad*2,86);
+  ctx.fillStyle='#f4f6fa'; ctx.fillRect(pad,y-24,W-pad*2,134);
   ctx.fillStyle='#6b7484'; ctx.font='15px "PingFang SC","Microsoft YaHei",sans-serif';
   ctx.fillText('标准总工时  '+r.totalHours.toFixed(1)+'（约 '+r.days.toFixed(1)+' 人天）',pad+16,y);
   ctx.fillText('人工费 '+money(r.labor)+'   设备费 '+money(r.equip),pad+16,y+26);
@@ -2627,6 +3028,19 @@ function generateQuoteImage(){
     ctx.fillText('总计 '+money(r.grand),W-pad-16,y+58);
   }
   ctx.textAlign='left';
+  // 施工组织建议
+  if(r.crew){
+    const cf=(x)=>x.toFixed(1).replace(/\.0$/,'');
+    const c=r.crew;
+    const team=`${c.masters}师傅+${c.helpers}小工（${c.people}人）`;
+    let line;
+    if(c.target==='auto') line=`人员建议（${c.level}）：${team}，约 ${cf(c.planDays)} 天完工`;
+    else { line=`人员建议（${c.level}）：${c.target==='0.5'?'半天':'1天'}完工需 ${team}`; if(c.otHrs>c.dh) line+=`（2人干不完,需加派师傅）`; else if(c.otHrs>0) line+=`（仅2人需加班${cf(c.otHrs)}h/人）`; }
+    ctx.fillStyle='#0a7a55'; ctx.font='14px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText(line,pad+16,y+82);
+    ctx.fillStyle='#9aa3b2'; ctx.font='12px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText('人数为经验估算，加班工资未计入本报价。',pad+16,y+102);
+  }
   // 页脚
   ctx.fillStyle='#9aa3b2'; ctx.font='12px "PingFang SC","Microsoft YaHei",sans-serif';
   ctx.fillText('本报价按标准工时定额测算，工程量以实际为准。',pad,H-22);
@@ -2661,6 +3075,15 @@ $('wCopyBtn').addEventListener('click',()=>{
   lines.push(`设备/高空费 ${money(r.equip)}`);
   lines.push(`施工费小计 ${money(r.construction)}`);
   if(r.matFee>0){ lines.push(`材料费 ${money(r.matFee)}`); lines.push(`总计（施工+材料） ${money(r.grand)}`); }
+  if(r.crew){
+    const cf=(x)=>x.toFixed(1).replace(/\.0$/,'');
+    const c=r.crew;
+    const team=`${c.masters}师傅+${c.helpers}小工（${c.people}人）`;
+    lines.push('————————————');
+    if(c.target==='auto') lines.push(`人员建议（${c.level}）：${team}，约 ${cf(c.planDays)} 天完工`);
+    else { lines.push(`人员建议（${c.level}）：${c.target==='0.5'?'半天':'1天'}完工需 ${team}`); if(c.otHrs>c.dh) lines.push('2人干不完，建议直接按上面加派师傅'); else if(c.otHrs>0) lines.push(`若仅2人需加班约 ${cf(c.otHrs)} 小时/人·天，建议加派师傅`); }
+    lines.push('人数为经验估算，加班工资未计入标准费。');
+  }
   copyText(lines.join('\n'),()=>toast('施工费明细已复制'));
 });
 
